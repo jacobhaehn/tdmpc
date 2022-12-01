@@ -104,8 +104,12 @@ def enc(cfg):
 				  nn.Conv2d(cfg.num_channels, cfg.num_channels, 5, stride=2), nn.ReLU(),
 				  nn.Conv2d(cfg.num_channels, cfg.num_channels, 3, stride=2), nn.ReLU(),
 				  nn.Conv2d(cfg.num_channels, cfg.num_channels, 3, stride=2), nn.ReLU()]
-		out_shape = _get_out_shape((C, cfg.img_size, cfg.img_size), layers)
+		out_shape = _get_out_shape((C, cfg.img_size_height, cfg.img_size_width), layers)
+		print("helper: out_shape", out_shape)
+		print("helper: layers", layers)
+		print("helper: cfg.latent_dim", cfg.latent_dim)
 		layers.extend([Flatten(), nn.Linear(np.prod(out_shape), cfg.latent_dim)])
+		print("helper: layers2", layers)
 	else:
 		layers = [nn.Linear(cfg.obs_shape[0], cfg.enc_dim), nn.ELU(),
 				  nn.Linear(cfg.enc_dim, cfg.latent_dim)]
@@ -199,7 +203,9 @@ class ReplayBuffer():
 		self.device = torch.device(cfg.device)
 		self.capacity = min(cfg.train_steps, cfg.max_buffer_size)
 		dtype = torch.float32 if cfg.modality == 'state' else torch.uint8
+		#obs_shape = cfg.obs_shape if cfg.modality == 'state' else (3, *cfg.obs_shape[-2:])
 		obs_shape = cfg.obs_shape if cfg.modality == 'state' else (3, *cfg.obs_shape[-2:])
+		print("buffer - obs_shape", obs_shape)
 		self._obs = torch.empty((self.capacity+1, *obs_shape), dtype=dtype, device=self.device)
 		self._last_obs = torch.empty((self.capacity//cfg.episode_length, *cfg.obs_shape), dtype=dtype, device=self.device)
 		self._action = torch.empty((self.capacity, cfg.action_dim), dtype=torch.float32, device=self.device)
@@ -214,6 +220,8 @@ class ReplayBuffer():
 		return self
 
 	def add(self, episode: Episode):
+		print(self._obs.shape)
+		print(self.capacity)
 		self._obs[self.idx:self.idx+self.cfg.episode_length] = episode.obs[:-1] if self.cfg.modality == 'state' else episode.obs[:-1, -3:]
 		self._last_obs[self.idx//self.cfg.episode_length] = episode.obs[-1]
 		self._action[self.idx:self.idx+self.cfg.episode_length] = episode.action

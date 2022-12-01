@@ -31,11 +31,15 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 	"""Evaluate a trained agent and optionally save a video."""
 	episode_rewards = []
 	for i in range(num_episodes):
-		obs, done, ep_reward, t = env.reset(), False, 0, 0
+		obs, done, ep_reward, t = env.reset().reshape(3,84,84), False, 0, 0
 		if video: video.init(env, enabled=(i==0))
 		while not done:
+			
 			action = agent.plan(obs, eval_mode=True, step=step, t0=t==0)
-			obs, reward, done, _ = env.step(action.cpu().numpy())
+			action_max = np.argmax(action.cpu().numpy())
+			obs, reward, done, _ = env.step(action_max)
+			print("I'm Working!, Reward = ", reward)
+			obs=obs.reshape(3,84,84)
 			ep_reward += reward
 			if video: video.record(env)
 			t += 1
@@ -57,7 +61,8 @@ def train(cfg):
 	for step in range(0, cfg.train_steps+cfg.episode_length, cfg.episode_length):
 		print("Step:", step)
 		# Collect trajectory
-		obs = env.reset()
+		obs = env.reset().reshape(3,84,84)
+		print(obs.shape)
 		episode = Episode(cfg, obs)
 		while not episode.done:
 			print(len(episode))
@@ -68,9 +73,12 @@ def train(cfg):
 			print("Action_Max = ", action_max)
 			#obs, reward, done, _ = env.step(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
+			obs=obs.reshape(3,84,84)
 			#episode += (obs, action, reward, done)
 			episode += (obs, action_max, reward, done)
 		#assert len(episode) == cfg.episode_length
+		print("episode obs_shape", episode.obs.shape)
+		print("episode buffer", buffer._obs.shape)
 		buffer += episode
 
 		# Update model

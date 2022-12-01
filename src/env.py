@@ -6,6 +6,7 @@ from dm_control import suite
 from dm_control.suite.wrappers import action_scale, pixels
 from dm_env import StepType, specs
 import gym
+from gym.wrappers import AtariPreprocessing
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
@@ -286,14 +287,22 @@ def make_env(cfg):
 
 	return env
 	
+	
+	
 def make_env_atari(cfg):
 	task = cfg.task
 	print(task)
 	env = gym.make(task) # Do this later for pretty render :) #, render_mode="human")
 	
+	#size = 84x84
+	#env = AtariPreprocessing(env, frame_skip=1, screen_size=84)
+	env = gym.wrappers.ResizeObservation(env, (84, 84))
+	print(env.observation_space.shape)
+	
 	
 	# Convenience
-	cfg.obs_shape = tuple(int(x) for x in env.observation_space.shape)
+	cfg.obs_shape = tuple(int(x) for x in env.observation_space.shape[::-1])
+	print(cfg.obs_shape)
 	cfg.action_shape = tuple(int(x) for x in env.action_space.shape)
 	cfg.action_dim = len(env.env.get_action_meanings()) #env.action_space.shape[0]
 	print(env.env.get_action_meanings())

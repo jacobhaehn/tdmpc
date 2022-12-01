@@ -1,6 +1,8 @@
 train_steps: 3000000/${action_repeat}
-frame_stack: 3
+frame_stack: 1
 num_channels: 32
 img_size: 84
+img_size_width: 84
+img_size_height: 84
 lr: 3e-4
 batch_size: 256
