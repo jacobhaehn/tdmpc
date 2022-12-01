@@ -285,3 +285,18 @@ def make_env(cfg):
 	cfg.action_dim = env.action_space.shape[0]
 
 	return env
+	
+def make_env_atari(cfg):
+	task = cfg.task
+	print(task)
+	env = gym.make(task) # Do this later for pretty render :) #, render_mode="human")
+	
+	
+	# Convenience
+	cfg.obs_shape = tuple(int(x) for x in env.observation_space.shape)
+	cfg.action_shape = tuple(int(x) for x in env.action_space.shape)
+	cfg.action_dim = len(env.env.get_action_meanings()) #env.action_space.shape[0]
+	print(env.env.get_action_meanings())
+	
+	return env
+

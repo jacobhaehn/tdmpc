@@ -1,9 +1,9 @@
 # environment
 task: quadruped-run
-modality: 'state'
+modality: 'pixels' #'state'
 action_repeat: ???
 discount: 0.99
-episode_length: 1000/${action_repeat}
+episode_length: 100000 #1000/${action_repeat}
 train_steps: 500000/${action_repeat}
 
 # planning

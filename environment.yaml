@@ -1,6 +1,8 @@
 name: tdmpc
 channels:
   - defaults
+  - pytorch
+  - conda-forge
 dependencies:
   - python=3.8
   - pytorch=1.9
