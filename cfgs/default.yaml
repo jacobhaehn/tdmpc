@@ -3,7 +3,7 @@ task: quadruped-run
 modality: 'pixels' #'state'
 action_repeat: ???
 discount: 0.99
-episode_length: 100000 #1000/${action_repeat}
+episode_length:  1000 #1000/${action_repeat}
 train_steps: 500000/${action_repeat}
 
 # planning
@@ -40,9 +40,9 @@ mlp_dim: 512
 latent_dim: 50
 
 # wandb (insert your own)
-use_wandb: false
-wandb_project: none
-wandb_entity: none
+use_wandb: true
+wandb_project: tdmpc
+wandb_entity: 7202-tdmpc
 
 # misc
 seed: 1
