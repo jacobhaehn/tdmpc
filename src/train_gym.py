@@ -42,6 +42,7 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 			obs=obs.reshape(3,84,84)
 			ep_reward += reward
 			if video: video.record(env)
+	
 			t += 1
 		episode_rewards.append(ep_reward)
 		if video: video.save(env_step)
