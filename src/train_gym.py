@@ -59,7 +59,8 @@ def train(cfg):
 	# Run training
 	L = logger.Logger(work_dir, cfg)
 	episode_idx, start_time = 0, time.time()
-	for step in range(0, cfg.train_steps+cfg.episode_length, cfg.episode_length):
+	#for step in range(0, cfg.train_steps+cfg.episode_length, cfg.episode_length):
+	for step in range(0, cfg.train_steps*cfg.episode_length, cfg.episode_length): #TODO: CHeck this, but multuplication here seems more right
 		print("Step:", step)
 		# Collect trajectory
 		obs = env.reset().reshape(3,84,84)
@@ -86,7 +87,8 @@ def train(cfg):
 		# Update model
 		train_metrics = {}
 		if step >= cfg.seed_steps:
-			num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
+			#num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
+			num_updates = 1 # TODO: FIX THIS
 			for i in range(num_updates):
 				train_metrics.update(agent.update(buffer, step+i))
 

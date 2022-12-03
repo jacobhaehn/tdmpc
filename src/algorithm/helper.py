@@ -257,8 +257,13 @@ class ReplayBuffer():
 
 	def sample(self):
 		probs = (self._priorities if self._full else self._priorities[:self.idx]) ** self.cfg.per_alpha
-		probs /= probs.sum()
+		probs = torch.nan_to_num(probs)
+		print("probs", probs, probs.nansum())
+		probs /= probs.nansum()
+		probs = torch.nan_to_num(probs)
 		total = len(probs)
+		print("helper - sample - prob, total:", probs, total, self._full, self._priorities, self.cfg.per_alpha)
+		print("Prob Sum:", probs.cpu().numpy().sum())
 		idxs = torch.from_numpy(np.random.choice(total, self.cfg.batch_size, p=probs.cpu().numpy(), replace=not self._full)).to(self.device)
 		weights = (total * probs[idxs]) ** (-self.cfg.per_beta)
 		weights /= weights.max()
