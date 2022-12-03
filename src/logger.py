@@ -67,7 +67,8 @@ class VideoRecorder:
 
 	def record(self, env):
 		if self.enabled:
-			frame = env.render(mode='rgb_array', height=self.render_size, width=self.render_size, camera_id=0)
+			#frame = env.render(mode='rgb_array', height=self.render_size, width=self.render_size, camera_id=0)
+			env.render(mode='rgb_array')
 			self.frames.append(frame)
 
 	def save(self, step):

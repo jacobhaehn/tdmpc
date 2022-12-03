@@ -30,7 +30,7 @@ def set_seed(seed):
 def evaluate(env, agent, num_episodes, step, env_step, video):
 	"""Evaluate a trained agent and optionally save a video."""
 	episode_rewards = []
-	for i in range(num_episodes):
+	for i in range(1): #range(num_episodes):
 		obs, done, ep_reward, t = env.reset().reshape(3,84,84), False, 0, 0
 		if video: video.init(env, enabled=(i==0))
 		while not done:
@@ -38,9 +38,9 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 			action = agent.plan(obs, eval_mode=True, step=step, t0=t==0)
 			action_max = np.argmax(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
-			print("I'm Working!, Reward = ", reward)
 			obs=obs.reshape(3,84,84)
 			ep_reward += reward
+			print("I'm Working!, Reward = ", ep_reward)
 			if video: video.record(env)
 	
 			t += 1
@@ -74,6 +74,7 @@ def train(cfg):
 			print("Action_Max = ", action_max)
 			#obs, reward, done, _ = env.step(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
+			#env.render()
 			obs=obs.reshape(3,84,84)
 			#episode += (obs, action, reward, done)
 			episode += (obs, action_max, reward, done)

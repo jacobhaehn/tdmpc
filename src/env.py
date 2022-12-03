@@ -292,7 +292,7 @@ def make_env(cfg):
 def make_env_atari(cfg):
 	task = cfg.task
 	print(task)
-	env = gym.make(task) # Do this later for pretty render :) #, render_mode="human")
+	env = gym.make(task, render_mode='human')
 	
 	#size = 84x84
 	#env = AtariPreprocessing(env, frame_skip=1, screen_size=84)
