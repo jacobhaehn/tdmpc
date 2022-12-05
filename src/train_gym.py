@@ -40,7 +40,7 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 			obs, reward, done, _ = env.step(action_max)
 			obs=obs.reshape(3,84,84)
 			ep_reward += reward
-			print("I'm Working!, Reward = ", ep_reward)
+			#print("I'm Working!, Reward = ", ep_reward)
 			if video: video.record(env)
 	
 			t += 1
@@ -67,12 +67,12 @@ def train(cfg):
 		print(obs.shape)
 		episode = Episode(cfg, obs)
 		while not episode.done:
-			print(len(episode))
+			#print(len(episode))
 			action = agent.plan(obs, step=step, t0=episode.first)
 			#print(action)
 			# TODO: MAKE SURE THIS MAKES SENSE LATER, Try magnitude vs absolute
 			action_max = np.argmax(action.cpu().numpy())
-			print("Action_Max = ", action_max)
+			#print("Action_Max = ", action_max)
 			#obs, reward, done, _ = env.step(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
 			#env.render()

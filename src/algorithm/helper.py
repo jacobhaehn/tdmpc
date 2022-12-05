@@ -229,12 +229,16 @@ class ReplayBuffer():
 		self._action[self.idx:self.idx+self.cfg.episode_length] = episode.action
 		self._reward[self.idx:self.idx+self.cfg.episode_length] = episode.reward
 		if self._full:
+			print("_priorities", self._priorities.max(), self._priorities)
+			self._priorities = torch.nan_to_num(self._priorities)
 			max_priority = self._priorities.max().to(self.device).item()
+			print("Max_Priority", max_priority)
 		else:
 			max_priority = 1. if self.idx == 0 else self._priorities[:self.idx].max().to(self.device).item()
 		mask = torch.arange(self.cfg.episode_length) >= self.cfg.episode_length-self.cfg.horizon
 		new_priorities = torch.full((self.cfg.episode_length,), max_priority, device=self.device)
 		new_priorities[mask] = 0
+		print("New_Priorities: ", new_priorities)
 		self._priorities[self.idx:self.idx+self.cfg.episode_length] = new_priorities
 		self.idx = (self.idx + self.cfg.episode_length) % self.capacity
 		self._full = self._full or self.idx == 0
