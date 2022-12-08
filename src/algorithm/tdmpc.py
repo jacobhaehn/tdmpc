@@ -103,8 +103,9 @@ class TDMPC():
 
 		# Sample policy trajectories
 		obs = torch.tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)                          # Convert observation to tensor
-		#horizon = int(min(self.cfg.horizon, h.linear_schedule(self.cfg.horizon_schedule, step)))			   # Get horizon min from config - ALWAYS 1 for some reason
-		horizon = int(self.cfg.horizon)
+		horizon = int(min(self.cfg.horizon, h.linear_schedule(self.cfg.horizon_schedule, step)))			   # Get horizon min from config - ALWAYS 1 for some reason
+		print(horizon)
+		#horizon = int(self.cfg.horizon)
 		num_pi_trajs = int(self.cfg.mixture_coef * self.cfg.num_samples)
 		if num_pi_trajs > 0:
 			pi_actions = torch.empty(horizon, num_pi_trajs, self.cfg.action_dim, device=self.device)
@@ -134,13 +135,15 @@ class TDMPC():
 
 			# Update parameters
 			max_value = elite_value.max(0)[0]
+			#print("max_value1", max_value)
 			score = torch.exp(self.cfg.temperature*(elite_value - max_value))
 			score /= score.sum(0)
 			_mean = torch.sum(score.unsqueeze(0) * elite_actions, dim=1) / (score.sum(0) + 1e-9)
 			_std = torch.sqrt(torch.sum(score.unsqueeze(0) * (elite_actions - _mean.unsqueeze(1)) ** 2, dim=1) / (score.sum(0) + 1e-9))
 			_std = _std.clamp_(self.std, 2)
 			mean, std = self.cfg.momentum * mean + (1 - self.cfg.momentum) * _mean, _std
-
+		
+		#print("max_value2", max_value)
 		# Outputs
 		score = score.squeeze(1).cpu().numpy()
 		actions = elite_actions[:, np.random.choice(np.arange(score.shape[0]), p=score)]
@@ -149,7 +152,8 @@ class TDMPC():
 		a = mean
 		if not eval_mode:
 			a += std * torch.randn(self.cfg.action_dim, device=std.device)
-		return a
+		
+		return a # TODO EDIT THIS
 
 	def update_pi(self, zs):
 		"""Update policy using a sequence of latent states."""

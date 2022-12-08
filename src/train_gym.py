@@ -28,15 +28,19 @@ def set_seed(seed):
 
 
 def evaluate(env, agent, num_episodes, step, env_step, video):
+	# env = gym.make("ALE/Breakout-v5", render_mode="human")
+	# env = gym.wrappers.ResizeObservation(env, (84, 84))
 	"""Evaluate a trained agent and optionally save a video."""
 	episode_rewards = []
 	for i in range(1): #range(num_episodes):
 		obs, done, ep_reward, t = env.reset().reshape(3,84,84), False, 0, 0
 		if video: video.init(env, enabled=(i==0))
 		while not done:
-			
+			#input("Press Enter to continue...")
 			action = agent.plan(obs, eval_mode=True, step=step, t0=t==0)
+			#print(action)
 			action_max = np.argmax(action.cpu().numpy()) # TODO TODO TODO CHANGE THIS BACK FROM ABS
+			#print(action_max)
 			obs, reward, done, _ = env.step(action_max)
 			obs=obs.reshape(3,84,84)
 			ep_reward += reward
@@ -48,6 +52,10 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 		if video: video.save(env_step)
 	return np.nanmean(episode_rewards)
 	
+# Special for Breakout
+# def argmax_special(action):
+# 	if action[0] > action[1] or action[0] > action[2]:
+
 
 def train(cfg):
 	"""Training script for TD-MPC. Requires a CUDA-enabled device."""
@@ -55,6 +63,7 @@ def train(cfg):
 	set_seed(cfg.seed)
 	work_dir = Path().cwd() / __LOGS__ / cfg.task / cfg.modality / cfg.exp_name / str(cfg.seed)
 	env, agent, buffer = make_env_atari(cfg), TDMPC(cfg), ReplayBuffer(cfg)
+	env_step = 0
 	
 	# Run training
 	L = logger.Logger(work_dir, cfg)
@@ -68,10 +77,12 @@ def train(cfg):
 		episode = Episode(cfg, obs)
 		while not episode.done and len(episode) < cfg.episode_length:
 			#print(len(episode))
+			#action = agent.plan(obs, step=step, t0=episode.first)
 			action = agent.plan(obs, step=step, t0=episode.first)
-			#print(action)
+			#print(action.cpu().numpy()) #, max_value)
 			# TODO: MAKE SURE THIS MAKES SENSE LATER, Try magnitude vs absolute
 			action_max = np.argmax(action.cpu().numpy()) # TODO # TODO #TODO Changed this
+			#action_max = argmax_special(action.cpu().numpy()) # TODO # TODO #TODO Changed this
 			#print("Action_Max = ", action_max)
 			#obs, reward, done, _ = env.step(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
@@ -84,6 +95,7 @@ def train(cfg):
 		#print("episode buffer", buffer._obs.shape)
 		buffer += episode
 
+
 		# Update model
 		train_metrics = {}
 		if step >= cfg.seed_steps:
@@ -94,7 +106,7 @@ def train(cfg):
 
 		# Log training episode
 		episode_idx += 1
-		env_step = int(step*cfg.action_repeat)
+		env_step += len(episode)*cfg.action_repeat   #int(step*cfg.action_repeat)
 		common_metrics = {
 			'episode': episode_idx,
 			'step': step,
