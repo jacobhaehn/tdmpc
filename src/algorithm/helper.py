@@ -206,7 +206,7 @@ class ReplayBuffer():
 		dtype = torch.float32 if cfg.modality == 'state' else torch.uint8
 		#obs_shape = cfg.obs_shape if cfg.modality == 'state' else (3, *cfg.obs_shape[-2:])
 		obs_shape = cfg.obs_shape if cfg.modality == 'state' else (3, *cfg.obs_shape[-2:])
-		print("buffer - obs_shape", obs_shape)
+		#print("buffer - obs_shape", obs_shape)
 		self._obs = torch.empty((self.capacity+1, *obs_shape), dtype=dtype, device=self.device)
 		self._last_obs = torch.empty((self.capacity//cfg.episode_length, *cfg.obs_shape), dtype=dtype, device=self.device)
 		self._action = torch.empty((self.capacity, cfg.action_dim), dtype=torch.float32, device=self.device)
@@ -221,24 +221,24 @@ class ReplayBuffer():
 		return self
 
 	def add(self, episode: Episode):
-		print(self._obs.shape)
-		print(self.capacity)
-		print(episode.obs[:-1, -3:].shape)
+		#print(self._obs.shape)
+		#print(self.capacity)
+		#print(episode.obs[:-1, -3:].shape)
 		self._obs[self.idx:self.idx+self.cfg.episode_length] = episode.obs[:-1] if self.cfg.modality == 'state' else episode.obs[:-1, -3:]
 		self._last_obs[self.idx//self.cfg.episode_length] = episode.obs[-1]
 		self._action[self.idx:self.idx+self.cfg.episode_length] = episode.action
 		self._reward[self.idx:self.idx+self.cfg.episode_length] = episode.reward
 		if self._full:
-			print("_priorities", self._priorities.max(), self._priorities)
+			#print("_priorities", self._priorities.max(), self._priorities)
 			self._priorities = torch.nan_to_num(self._priorities)
 			max_priority = self._priorities.max().to(self.device).item()
-			print("Max_Priority", max_priority)
+			#print("Max_Priority", max_priority)
 		else:
 			max_priority = 1. if self.idx == 0 else self._priorities[:self.idx].max().to(self.device).item()
 		mask = torch.arange(self.cfg.episode_length) >= self.cfg.episode_length-self.cfg.horizon
 		new_priorities = torch.full((self.cfg.episode_length,), max_priority, device=self.device)
 		new_priorities[mask] = 0
-		print("New_Priorities: ", new_priorities)
+		#print("New_Priorities: ", new_priorities)
 		self._priorities[self.idx:self.idx+self.cfg.episode_length] = new_priorities
 		self.idx = (self.idx + self.cfg.episode_length) % self.capacity
 		self._full = self._full or self.idx == 0
@@ -262,12 +262,12 @@ class ReplayBuffer():
 	def sample(self):
 		probs = (self._priorities if self._full else self._priorities[:self.idx]) ** self.cfg.per_alpha
 		probs = torch.nan_to_num(probs)
-		print("probs", probs, probs.nansum())
+		#print("probs", probs, probs.nansum())
 		probs /= probs.nansum()
 		probs = torch.nan_to_num(probs)
 		total = len(probs)
-		print("helper - sample - prob, total:", probs, total, self._full, self._priorities, self.cfg.per_alpha)
-		print("Prob Sum:", probs.cpu().numpy().sum())
+		#print("helper - sample - prob, total:", probs, total, self._full, self._priorities, self.cfg.per_alpha)
+		#print("Prob Sum:", probs.cpu().numpy().sum())
 		idxs = torch.from_numpy(np.random.choice(total, self.cfg.batch_size, p=probs.cpu().numpy(), replace=not self._full)).to(self.device)
 		weights = (total * probs[idxs]) ** (-self.cfg.per_beta)
 		weights /= weights.max()

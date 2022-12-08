@@ -36,7 +36,7 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 		while not done:
 			
 			action = agent.plan(obs, eval_mode=True, step=step, t0=t==0)
-			action_max = np.argmax(action.cpu().numpy())
+			action_max = np.argmax(action.cpu().numpy()) # TODO TODO TODO CHANGE THIS BACK FROM ABS
 			obs, reward, done, _ = env.step(action_max)
 			obs=obs.reshape(3,84,84)
 			ep_reward += reward
@@ -60,18 +60,18 @@ def train(cfg):
 	L = logger.Logger(work_dir, cfg)
 	episode_idx, start_time = 0, time.time()
 	#for step in range(0, cfg.train_steps+cfg.episode_length, cfg.episode_length):
-	for step in range(0, cfg.train_steps*cfg.episode_length, cfg.episode_length): #TODO: CHeck this, but multuplication here seems more right
+	for step in range(0, cfg.train_steps): #*cfg.episode_length, cfg.episode_length): #TODO: CHeck this, but multuplication here seems more right
 		print("Step:", step)
 		# Collect trajectory
 		obs = env.reset().reshape(3,84,84)
-		print(obs.shape)
+		#print(obs.shape)
 		episode = Episode(cfg, obs)
-		while not episode.done:
+		while not episode.done and len(episode) < cfg.episode_length:
 			#print(len(episode))
 			action = agent.plan(obs, step=step, t0=episode.first)
 			#print(action)
 			# TODO: MAKE SURE THIS MAKES SENSE LATER, Try magnitude vs absolute
-			action_max = np.argmax(action.cpu().numpy())
+			action_max = np.argmax(action.cpu().numpy()) # TODO # TODO #TODO Changed this
 			#print("Action_Max = ", action_max)
 			#obs, reward, done, _ = env.step(action.cpu().numpy())
 			obs, reward, done, _ = env.step(action_max)
@@ -80,15 +80,15 @@ def train(cfg):
 			#episode += (obs, action, reward, done)
 			episode += (obs, action_max, reward, done)
 		#assert len(episode) == cfg.episode_length
-		print("episode obs_shape", episode.obs.shape)
-		print("episode buffer", buffer._obs.shape)
+		#print("episode obs_shape", episode.obs.shape)
+		#print("episode buffer", buffer._obs.shape)
 		buffer += episode
 
 		# Update model
 		train_metrics = {}
 		if step >= cfg.seed_steps:
-			#num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
-			num_updates = 1 # TODO: FIX THIS
+			num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
+			#num_updates = 1 # TODO: FIX THIS
 			for i in range(num_updates):
 				train_metrics.update(agent.update(buffer, step+i))
 
