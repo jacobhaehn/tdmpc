@@ -53,8 +53,16 @@ def evaluate(env, agent, num_episodes, step, env_step, video):
 	return np.nanmean(episode_rewards)
 	
 # Special for Breakout
-# def argmax_special(action):
-# 	if action[0] > action[1] or action[0] > action[2]:
+def argmax_special(action):
+	difference = action[2] - action[3]
+	if action[0] > action[2] or action[0] > action[3]:
+		return action[0] #Noop
+	elif difference > 0.1:
+		return action[2] #Right
+	elif difference < -0.1:
+		return action[3] #Left
+	else:
+		return action[1] #Fire
 
 
 def train(cfg):
@@ -99,9 +107,10 @@ def train(cfg):
 		# Update model
 		train_metrics = {}
 		if step >= cfg.seed_steps:
-			num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
-			#num_updates = 1 # TODO: FIX THIS
+			#num_updates = cfg.seed_steps if step == cfg.seed_steps else cfg.episode_length
+			num_updates = cfg.seed_steps if step == cfg.seed_steps else len(episode) # TODO: FIX THIS
 			for i in range(num_updates):
+				print("Update", i, "of", num_updates)
 				train_metrics.update(agent.update(buffer, step+i))
 
 		# Log training episode
@@ -117,7 +126,7 @@ def train(cfg):
 		L.log(train_metrics, category='train')
 
 		# Evaluate agent periodically
-		if env_step % cfg.eval_freq == 0:
+		if step % cfg.eval_freq == 0 and step > cfg.seed_steps:
 			common_metrics['episode_reward'] = evaluate(env, agent, cfg.eval_episodes, step, env_step, L.video)
 			L.log(common_metrics, category='eval')
 
